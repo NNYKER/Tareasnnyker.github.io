@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Página Principal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 5px;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+    }
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .form-group button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .form-group button:hover {
+      background-color: #45a049;
+    }
+    #result {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+    #copy-button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #008CBA;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    #copy-button:hover {
+      background-color: #006080;
+    }
+    #user-info {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #logout-button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #f44336;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    #logout-button:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Formulario de Cambio</h2>
+    <div id="user-info">
+      <p>Usuario: <span id="username"></span></p>
+      <button id="logout-button" onclick="logout()">Cerrar sesión</button>
+    </div>
+    <div class="form-group">
+      <label for="original">Texto original:</label>
+      <input type="text" id="original" readonly value=".sa" />
+    </div>
+    <div class="form-group">
+      <label for="replacement">Texto de reemplazo:</label>
+      <input type="text" id="replacement" />
+    </div>
+    <div class="form-group">
+      <label for="list">Lista de números:</label>
+      <textarea id="list" rows="5"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="seconds-start">Segundos antes de comenzar:</label>
+      <input type="text" id="seconds-start" />
+    </div>
+    <div class="form-group">
+      <label for="seconds">Segundos entre párrafos:</label>
+      <input type="text" id="seconds" />
+    </div>
+    <div class="form-group">
+      <button onclick="performReplacement()">Realizar reemplazo</button>
+    </div>
+    <div id="result" style="display: none;">
+      <h3>Resultado:</h3>
+      <pre id="modifiedCode"></pre>
+      <button id="copy-button" onclick="copyToClipboard()">Copiar al Portapapeles</button>
+    </div>
+  </div>
+
+  <script>
+    // Comprobar si se ha iniciado sesión
+    if (!localStorage.getItem('loggedIn')) {
+      // Redirigir a la página de inicio de sesión
+      window.location.href = 'index.html';
+    } else {
+      // Mostrar el nombre de usuario
+      document.getElementById('username').textContent = localStorage.getItem('loggedIn');
+    }
+
+    function performReplacement() {
+      var originalText = document.getElementById('original').value;
+      var replacementText = document.getElementById('replacement').value;
+      var listText = document.getElementById('list').value.trim();
+      var secondsStartText = document.getElementById('seconds-start').value.trim();
+      var secondsText = document.getElementById('seconds').value.trim();
+
+      var list = listText.split('\n').map(function(item) {
+        return item.trim();
+      }).join(',');
+
+      var code = `#include <Array.au3>
+
+Local $parrafos = StringSplit("${list}", ",")
+
+; Esperar ${secondsStartText} segundos antes de comenzar
+Sleep(${secondsStartText} * 1000)
+
+Local $i
+For $i = 1 To $parrafos[0] Step 4
+    ; Copiar el primer texto al portapapeles con el formato correcto
+    ClipPut("${replacementText} " & $parrafos[$i])
+
+    ; Pegar el primer texto y enviar la tecla "Enter"
+    Send("^v{ENTER}")
+
+    ; Copiar el segundo texto al portapapeles con el formato correcto
+    ClipPut("${replacementText} " & $parrafos[$i + 1])
+
+    ; Esperar menos de un segundo y pegar el segundo texto
+    Sleep(100)
+    Send("^v{ENTER}")
+
+    ; Esperar ${secondsText} segundos antes de continuar
+    Sleep(${secondsText} * 1000)
+
+    ; Copiar el tercer texto al portapapeles con el formato correcto
+    ClipPut("${replacementText} " & $parrafos[$i + 2])
+
+    ; Pegar el tercer texto y enviar la tecla "Enter"
+    Send("^v{ENTER}")
+
+    ; Copiar el cuarto texto al portapapeles con el formato correcto
+    ClipPut("${replacementText} " & $parrafos[$i + 3])
+
+    ; Esperar menos de un segundo y pegar el cuarto texto
+    Sleep(100)
+    Send("^v{ENTER}")
+
+    ; Esperar ${secondsText} segundos antes de continuar
+    Sleep(${secondsText} * 1000)
+
+    ; Esperar ${secondsText} segundos antes de continuar con los siguientes pares de párrafos
+    Sleep(${secondsText} * 1000)
+Next
+
+; Finalizar el programa`;
+
+      code = code.replace(/\.sa/g, originalText);
+
+      document.getElementById('modifiedCode').textContent = code;
+      document.getElementById('result').style.display = 'block';
+    }
+
+    function copyToClipboard() {
+      var codeElement = document.getElementById('modifiedCode');
+      var code = codeElement.textContent;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(code)
+          .then(function() {
+            alert('El código ha sido copiado al portapapeles.');
+          })
+          .catch(function(error) {
+            console.error('Error al copiar al portapapeles:', error);
+          });
+      } else {
+        var textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          var successful = document.execCommand('copy');
+          var msg = successful ? 'El código ha sido copiado al portapapeles.' : 'No se pudo copiar el código.';
+          alert(msg);
+        } catch (error) {
+          console.error('Error al copiar al portapapeles:', error);
+        }
+        document.body.removeChild(textarea);
+      }
+    }
+    
+    function logout() {
+      // Eliminar la información de inicio de sesión del almacenamiento local
+      localStorage.removeItem('loggedIn');
+      // Redirigir a la página de inicio de sesión
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
