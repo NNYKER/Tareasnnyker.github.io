@@ -69,9 +69,9 @@
       var password = document.getElementById('password').value;
 
       // Comprobar el usuario y contraseña
-      if (username === '7774' && password === '7774') {
+      if ((username === 'Admin' && password === 'Junior!2006') || (username === 'TheGoat' && password === 'funcionabins204')) {
         // Almacenar información de inicio de sesión en el almacenamiento local
-        localStorage.setItem('loggedIn', 'true');
+        localStorage.setItem('loggedIn', username);
 
         // Redirigir a la página principal
         window.location.href = 'main.html';
